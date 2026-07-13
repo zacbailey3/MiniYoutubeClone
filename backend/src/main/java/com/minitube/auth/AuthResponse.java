@@ -1,5 +1,13 @@
 package com.minitube.auth;
 
-public class AuthResponse {
+// Represents what auth endpoints return to frontend
 
-}
+
+public record AuthResponse( 
+    String token,
+    Long userId,
+    String username,
+    String email) {
+    }
+
+
