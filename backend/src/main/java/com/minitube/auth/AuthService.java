@@ -1,9 +1,12 @@
 package com.minitube.auth;
 
+import java.util.Optional;
+
+import com.minitube.common.exception.DuplicateResourceException;
+import com.minitube.common.exception.InvalidCredentialsException;
 import com.minitube.users.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 
 import com.minitube.users.UserRepository;
 
@@ -29,15 +32,18 @@ public class AuthService {
     return response
     */
     public AuthResponse register(RegisterRequest request) {
+
        
        //check email in use
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email is already in use");
+            throw new DuplicateResourceException("Email is already in use");
        }
+
+
 
        //check username in use
        if (userRepository.existsByUsername(request.getUsername())) {
-        throw new IllegalArgumentException("Username is already in use");
+        throw new DuplicateResourceException("Username is already in use");
        }
        String passwordHash = passwordEncoder.encode(request.getPassword());
 
@@ -57,7 +63,33 @@ public class AuthService {
             savedUser.getUsername(),
             savedUser.getEmail()
        );
-       
+
     }
 
+
+    public AuthResponse login(LoginRequest request) {
+
+       
+        Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
+        
+        if (optionalUser.isEmpty()) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        User user = optionalUser.get();
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())){
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        return new AuthResponse(
+            null,
+            user.getId(),
+            user.getUsername(),
+            user.getEmail()
+       );
+    }
+
+
 }
+
